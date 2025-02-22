@@ -1,6 +1,6 @@
 import gradio as gr
 import os
-import anthropic
+import openai  #  ОСТАВЛЯЕМ только openai
 from dotenv import load_dotenv
 import io
 import pypdf
@@ -10,7 +10,7 @@ load_dotenv()
 
 # Добавляем ЛОГИРОВАНИЕ для проверки API-ключа
 print("=== ЗАПУСК ПРИЛОЖЕНИЯ ===")
-api_key = os.getenv("OPENAI_API_KEY")  # ИСПРАВЛЕНО: OPENAI_API_KEY
+api_key = os.getenv("OPENAI_API_KEY")  #  ИСПРАВЛЕНО: OPENAI_API_KEY
 if api_key:
     print(f"OPENAI_API_KEY найден: {api_key[:5]}... (первые 5 символов)")  # Показываем только начало ключа
 else:
@@ -81,8 +81,6 @@ def chat(message, history, file_obj=None, model_name="gpt-3.5-turbo"):
         gr.Error(f"Ошибка API OpenAI: {e}")
         print(f"Ошибка API OpenAI: {e}")  # Полный текст ошибки
         print(f"Тип ошибки: {type(e)}")
-        # if isinstance(e, openai.APIError): #  УДАЛИЛ эту проверку
-        #     print(f"Детали ошибки OpenAI: {e.json_body}")
         print(f"Детали ошибки OpenAI: {str(e)}")  #  ВЫВОДИМ просто str(e)
         yield f"Error: {e}", []
 
