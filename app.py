@@ -1,6 +1,6 @@
 import gradio as gr
 import os
-import openai
+import anthropic
 from dotenv import load_dotenv
 import io
 import pypdf
@@ -10,7 +10,7 @@ load_dotenv()
 
 # Добавляем ЛОГИРОВАНИЕ для проверки API-ключа
 print("=== ЗАПУСК ПРИЛОЖЕНИЯ ===")
-api_key = os.getenv("OPENAI_API_KEY")
+api_key = os.getenv("OPENAI_API_KEY")  # ИСПРАВЛЕНО: OPENAI_API_KEY
 if api_key:
     print(f"OPENAI_API_KEY найден: {api_key[:5]}... (первые 5 символов)")  # Показываем только начало ключа
 else:
@@ -80,9 +80,10 @@ def chat(message, history, file_obj=None, model_name="gpt-3.5-turbo"):
     except Exception as e:
         gr.Error(f"Ошибка API OpenAI: {e}")
         print(f"Ошибка API OpenAI: {e}")  # Полный текст ошибки
-        print(f"Тип ошибки: {type(e)}") # Добавил
-        if isinstance(e, openai.APIError): #Добавил
-            print(f"Детали ошибки OpenAI: {e.json_body}") #Добавил
+        print(f"Тип ошибки: {type(e)}")
+        # if isinstance(e, openai.APIError): #  УДАЛИЛ эту проверку
+        #     print(f"Детали ошибки OpenAI: {e.json_body}")
+        print(f"Детали ошибки OpenAI: {str(e)}")  #  ВЫВОДИМ просто str(e)
         yield f"Error: {e}", []
 
 def clear_history():
@@ -92,7 +93,7 @@ def clear_history():
 def get_available_models():
     try:
         models = openai.models.list()
-        print(f"Получен список моделей: {[model.id for model in models]}") # Добавил
+        print(f"Получен список моделей: {[model.id for model in models]}")
         return [model.id for model in models]
     except Exception as e:
         print(f"Ошибка при получении списка моделей: {e}")
