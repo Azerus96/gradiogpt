@@ -1,6 +1,6 @@
 import gradio as gr
 import os
-import openai  #  ОСТАВЛЯЕМ только openai
+import openai
 from dotenv import load_dotenv
 import io
 import pypdf
@@ -8,11 +8,10 @@ import json
 
 load_dotenv()
 
-# Добавляем ЛОГИРОВАНИЕ для проверки API-ключа
 print("=== ЗАПУСК ПРИЛОЖЕНИЯ ===")
-api_key = os.getenv("OPENAI_API_KEY")  #  ИСПРАВЛЕНО: OPENAI_API_KEY
+api_key = os.getenv("OPENAI_API_KEY")
 if api_key:
-    print(f"OPENAI_API_KEY найден: {api_key[:5]}... (первые 5 символов)")  # Показываем только начало ключа
+    print(f"OPENAI_API_KEY найден: {api_key[:5]}...")
 else:
     print("ОШИБКА: OPENAI_API_KEY не найден в переменных окружения!")
     gr.Error("OPENAI_API_KEY не найден! Установите переменную окружения.")
@@ -20,13 +19,14 @@ else:
 openai.api_key = api_key
 
 def chat(message, history, file_obj=None, model_name="gpt-3.5-turbo"):
-    print("=== НОВОЕ СООБЩЕНИЕ ===")
+    print("=== НОВОЕ СООБЩЕНИЕ (chat ВЫЗВАНА!) ===")  # ДОБАВИЛИ ЛОГ
     print(f"Входное сообщение: {message}, Модель: {model_name}")
 
     history = history or []
     history.append({"role": "user", "content": message})
-    print(f"История (после добавления сообщения пользователя):\n{json.dumps(history, indent=2)}")
+    print(f"История:\n{json.dumps(history, indent=2)}")
 
+    # ... (остальной код функции chat без изменений) ...
     if file_obj:
         print(f"Загружен файл: {file_obj.name}")
         try:
@@ -57,9 +57,7 @@ def chat(message, history, file_obj=None, model_name="gpt-3.5-turbo"):
         }
         print(f"Запрос к API OpenAI:\n{json.dumps(request_payload, indent=2)}")
 
-        # Добавляем ЛОГИРОВАНИЕ ПЕРЕД отправкой запроса
         print("=== ОТПРАВКА ЗАПРОСА В OPENAI API ===")
-
         response_stream = openai.chat.completions.create(**request_payload)
 
         full_response = ""
@@ -79,31 +77,35 @@ def chat(message, history, file_obj=None, model_name="gpt-3.5-turbo"):
 
     except Exception as e:
         gr.Error(f"Ошибка API OpenAI: {e}")
-        print(f"Ошибка API OpenAI: {e}")  # Полный текст ошибки
+        print(f"Ошибка API OpenAI: {e}")
         print(f"Тип ошибки: {type(e)}")
-        print(f"Детали ошибки OpenAI: {str(e)}")  #  ВЫВОДИМ просто str(e)
+        print(f"Детали ошибки OpenAI: {str(e)}")
         yield f"Error: {e}", []
+
 
 def clear_history():
     print("=== ОЧИСТКА ИСТОРИИ ===")
     return None, [], None
 
 def get_available_models():
+    print("=== get_available_models ВЫЗВАНА! ===")  # ДОБАВИЛИ ЛОГ
     try:
-        models = openai.models.list()
-        print(f"Получен список моделей: {[model.id for model in models]}")
-        return [model.id for model in models]
+        # models = openai.models.list() # ВРЕМЕННО ЗАКОММЕНТИРОВАЛИ
+        # print(f"Получен список моделей: {[model.id for model in models]}")
+        # return [model.id for model in models]
+        return ["gpt-3.5-turbo", "gpt-4"]  # ЖЕСТКО ЗАДАЕМ СПИСОК МОДЕЛЕЙ
     except Exception as e:
         print(f"Ошибка при получении списка моделей: {e}")
-        return ["gpt-3.5-turbo"]
+        return ["gpt-3.5-turbo"]  # ВСЕГДА возвращаем список
 
 with gr.Blocks(title="OpenAI Chat", theme=gr.themes.Soft()) as demo:
     gr.Markdown("# Chat with OpenAI Models")
-    available_models = get_available_models()
+    # available_models = get_available_models() # ВРЕМЕННО ЗАКОММЕНТИРОВАЛИ
+    available_models = ["gpt-3.5-turbo", "gpt-4"]  # ЖЕСТКО ЗАДАЕМ СПИСОК
     model_dropdown = gr.Dropdown(
         label="Select Model",
         choices=available_models,
-        value=available_models[0] if available_models else "gpt-3.5-turbo",
+        value=available_models[0],
     )
     chatbot = gr.Chatbot(label="Chat", value=[], height=550)
     with gr.Row():
@@ -125,7 +127,7 @@ with gr.Blocks(title="OpenAI Chat", theme=gr.themes.Soft()) as demo:
     file_upload.upload(chat, [msg, chatbot, file_upload, model_dropdown], [msg, chatbot])
     clear_hist_button.click(clear_history, [], [msg, chatbot, file_upload])
     send_button.click(chat, [msg, chatbot, file_upload, model_dropdown], [msg, chatbot])
-    demo.load(None, [], [chatbot])
+    # demo.load(None, [], [chatbot]) # ВРЕМЕННО ЗАКОММЕНТИРОВАЛИ
 
 if __name__ == "__main__":
     demo.queue()
